@@ -18,15 +18,25 @@
 import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
-import { promisify } from 'util';
+import * as promisify from 'util.promisify';
 
+import * as grpc from '../src';
+import {
+  sendUnaryData,
+  ServerUnaryCall,
+  ServiceError,
+} from '../src';
 import { CallCredentials } from '../src/call-credentials';
 import { ChannelCredentials } from '../src/channel-credentials';
-import * as grpc from '../src';
-import { ServiceClient, ServiceClientConstructor } from '../src/make-client';
-
-import { assert2, loadProtoFile, mockFunction } from './common';
-import { sendUnaryData, ServerUnaryCall, ServiceError } from '../src';
+import {
+  ServiceClient,
+  ServiceClientConstructor,
+} from '../src/make-client';
+import {
+  assert2,
+  loadProtoFile,
+  mockFunction,
+} from './common';
 
 const protoFile = path.join(__dirname, 'fixtures', 'echo_service.proto');
 const echoService = loadProtoFile(protoFile)

@@ -14,25 +14,44 @@
  * limitations under the License.
  */
 
+import * as dns from 'dns';
 import {
+  isIPv4,
+  isIPv6,
+} from 'net';
+import * as promisify from 'util.promisify';
+
+import {
+  BackoffOptions,
+  BackoffTimeout,
+} from './backoff-timeout';
+import { StatusObject } from './call-interface';
+import { ChannelOptions } from './channel-options';
+import {
+  LogVerbosity,
+  Status,
+} from './constants';
+import * as logging from './logging';
+import { Metadata } from './metadata';
+import {
+  registerDefaultScheme,
+  registerResolver,
   Resolver,
   ResolverListener,
-  registerResolver,
-  registerDefaultScheme,
 } from './resolver';
-import * as dns from 'dns';
-import * as util from 'util';
-import { extractAndSelectServiceConfig, ServiceConfig } from './service-config';
-import { Status } from './constants';
-import { StatusObject } from './call-interface';
-import { Metadata } from './metadata';
-import * as logging from './logging';
-import { LogVerbosity } from './constants';
-import { Endpoint, TcpSubchannelAddress } from './subchannel-address';
-import { GrpcUri, uriToString, splitHostPort } from './uri-parser';
-import { isIPv6, isIPv4 } from 'net';
-import { ChannelOptions } from './channel-options';
-import { BackoffOptions, BackoffTimeout } from './backoff-timeout';
+import {
+  extractAndSelectServiceConfig,
+  ServiceConfig,
+} from './service-config';
+import {
+  Endpoint,
+  TcpSubchannelAddress,
+} from './subchannel-address';
+import {
+  GrpcUri,
+  splitHostPort,
+  uriToString,
+} from './uri-parser';
 
 const TRACER_NAME = 'dns_resolver';
 
@@ -47,8 +66,8 @@ export const DEFAULT_PORT = 443;
 
 const DEFAULT_MIN_TIME_BETWEEN_RESOLUTIONS_MS = 30_000;
 
-const resolveTxtPromise = util.promisify(dns.resolveTxt);
-const dnsLookupPromise = util.promisify(dns.lookup);
+const resolveTxtPromise = promisify(dns.resolveTxt);
+const dnsLookupPromise = promisify(dns.lookup);
 
 /**
  * Resolver implementation that handles DNS names and IP addresses.
@@ -335,9 +354,14 @@ class DnsResolver implements Resolver {
     if (this.pendingLookupPromise === null) {
       if (this.isNextResolutionTimerRunning || this.backoff.isRunning()) {
         if (this.isNextResolutionTimerRunning) {
-          trace('resolution update delayed by "min time between resolutions" rate limit');
+          trace(
+            'resolution update delayed by "min time between resolutions" rate limit'
+          );
         } else {
-          trace('resolution update delayed by backoff timer until ' + this.backoff.getEndTime().toISOString());
+          trace(
+            'resolution update delayed by backoff timer until ' +
+              this.backoff.getEndTime().toISOString()
+          );
         }
         this.continueResolving = true;
       } else {
